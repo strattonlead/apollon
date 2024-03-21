@@ -1,6 +1,10 @@
-﻿using Microsoft.ML;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using Microsoft.ML;
 using Microsoft.ML.Transforms.TimeSeries;
 using System;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace ConsoleTester
@@ -9,6 +13,18 @@ namespace ConsoleTester
     {
         public static void Main(string[] args)
         {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                NewLine = Environment.NewLine,
+            };
+
+            using (var reader = new StreamReader("path\\to\\file.csv"))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                csv.Context.RegisterClassMap<FooMap>();
+                var records = csv.GetRecords<Foo>();
+            }
+
             var items = new ModelInput[]
             {
                 new ModelInput() { Age = 18, Date = new DateTime(2022, 1, 1), Reason = "KR", Absence = 1 },
@@ -115,6 +131,21 @@ namespace ConsoleTester
             {
                 Console.WriteLine(prediction);
             }
+        }
+    }
+
+    public class Foo
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class FooMap : ClassMap<Foo>
+    {
+        public FooMap()
+        {
+            Map(m => m.Id).Index(0);
+            Map(m => m.Name).Index(1);
         }
     }
 
